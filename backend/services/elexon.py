@@ -1,5 +1,5 @@
 
-from datetime import date
+from datetime import date, timedelta
 
 import httpx
 
@@ -38,9 +38,11 @@ async def fetch_wind_forecasts(
     url = f"{BASE_URL}/datasets/WINDFOR/stream"
 
     params = {
-        "publishDateTimeFrom": f"{start_date.isoformat()}T00:00:00Z",
-        "publishDateTimeTo": f"{end_date.isoformat()}T23:59:59Z",
-    }
+    "publishDateTimeFrom": (
+        f"{(start_date - timedelta(days=1)).isoformat()}T00:00:00Z"
+    ),
+    "publishDateTimeTo": f"{end_date.isoformat()}T23:59:59Z",
+}
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         response = await client.get(url, params=params)

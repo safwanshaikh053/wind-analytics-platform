@@ -18,7 +18,6 @@ from services.elexon import (
 async def get_wind_analytics(
     start_date: date,
     end_date: date,
-    cutoff: pd.Timestamp,
 ) -> dict:
     """Fetch, process and analyse wind generation data."""
 
@@ -34,11 +33,11 @@ async def get_wind_analytics(
 
     actuals = prepare_actuals(actual_records)
     forecasts = prepare_forecasts(forecast_records)
-
-    selected_forecasts = select_forecasts_as_of(
-        forecasts,
-        cutoff,
-    )
+    forecasts = forecasts[
+    (forecasts["delivery_time"].dt.date >= start_date)
+    & (forecasts["delivery_time"].dt.date <= end_date)
+]
+    selected_forecasts = select_forecasts_as_of(forecasts)
 
     metrics = calculate_metrics(
         actuals,

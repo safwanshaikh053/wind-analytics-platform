@@ -61,34 +61,37 @@ async def test_forecast():
         end_date=date(2026, 1, 2),
     )
 
+    target_delivery = "2026-01-01T12:00:00Z"
+
+    versions = [
+        {
+            "publishTime": record["publishTime"],
+            "startTime": record["startTime"],
+            "generation": record["generation"],
+        }
+        for record in data
+        if record["startTime"] == target_delivery
+    ]
+
+    versions.sort(key=lambda x: x["publishTime"])
+
     return {
-        "records_count": len(data),
-        "sample": data[:3],
+        "delivery_time": target_delivery,
+        "forecast_versions": len(versions),
+        "versions": versions,
     }
-
-
 @app.get("/api/analytics", response_model=AnalyticsSummary)
-async def analytics(
-    start_date: date,
-    end_date: date,
-    cutoff: datetime,
-):
+async def analytics(start_date: date, end_date: date):
+
     if start_date > end_date:
         raise HTTPException(
             status_code=400,
             detail="start_date must be before or equal to end_date",
         )
 
-    if cutoff.tzinfo is None or cutoff.utcoffset() is None:
-        raise HTTPException(
-            status_code=400,
-            detail="cutoff must include a timezone, preferably UTC",
-        )
-
     result = await get_wind_analytics(
         start_date=start_date,
         end_date=end_date,
-        cutoff=pd.Timestamp(cutoff).tz_convert("UTC"),
     )
 
     return result
