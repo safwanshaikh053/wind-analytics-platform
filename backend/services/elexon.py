@@ -11,7 +11,7 @@ async def fetch_wind_actuals(
     end_date: date,
 ) -> list[dict]:
     """Fetch actual wind generation for a date range."""
-    url = f"{BASE_URL}/datasets/FUELHH"
+    url = f"{BASE_URL}/datasets/FUELHH/stream"
 
     params = {
         "settlementDateFrom": start_date.isoformat(),
@@ -35,7 +35,7 @@ async def fetch_wind_forecasts(
     end_date: date,
 ) -> list[dict]:
     """Fetch wind-generation forecasts for a date range."""
-    url = f"{BASE_URL}/datasets/WINDFOR"
+    url = f"{BASE_URL}/datasets/WINDFOR/stream"
 
     params = {
         "publishDateTimeFrom": f"{start_date.isoformat()}T00:00:00Z",

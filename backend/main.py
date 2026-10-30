@@ -1,10 +1,16 @@
+from datetime import date
+from datetime import date, datetime
 
+import pandas as pd
+from fastapi import HTTPException
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from datetime import date
-from services.elexon import fetch_wind_actuals
-from services.elexon import fetch_wind_forecasts
-
+from services.analytics_service import get_wind_analytics
+from schemas.analytics import AnalyticsSummary, MetricsResponse
+from services.elexon import (
+    fetch_wind_actuals,
+    fetch_wind_forecasts,
+)
 
 app = FastAPI(
     title="Wind Forecast Analytics API",
@@ -59,3 +65,30 @@ async def test_forecast():
         "records_count": len(data),
         "sample": data[:3],
     }
+
+
+@app.get("/api/analytics", response_model=AnalyticsSummary)
+async def analytics(
+    start_date: date,
+    end_date: date,
+    cutoff: datetime,
+):
+    if start_date > end_date:
+        raise HTTPException(
+            status_code=400,
+            detail="start_date must be before or equal to end_date",
+        )
+
+    if cutoff.tzinfo is None or cutoff.utcoffset() is None:
+        raise HTTPException(
+            status_code=400,
+            detail="cutoff must include a timezone, preferably UTC",
+        )
+
+    result = await get_wind_analytics(
+        start_date=start_date,
+        end_date=end_date,
+        cutoff=pd.Timestamp(cutoff).tz_convert("UTC"),
+    )
+
+    return result
